@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Chat App</title>
+  <title>Chat App (Group + Personal)</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -10,71 +10,33 @@
   <div id="loginDiv" class="login-screen">
     <div class="login-box">
       <h2>Welcome 👋</h2>
-      <p>Enter your name to join the chat</p>
+      <p>Enter your name</p>
       <input id="nameInput" placeholder="Your name" />
-      <button id="joinBtn">Join Chat</button>
+      <button id="joinBtn">Join</button>
     </div>
   </div>
 
   <!-- Chat screen -->
   <div id="chatDiv" class="chat-container hidden">
-    <div class="chat-header">
-      <h3>Socket.IO Chat 💬</h3>
-      <span id="usernameLabel"></span>
+    <div class="sidebar">
+      <h3>Chats</h3>
+      <ul id="userList"></ul>
+      <button id="groupChatBtn">🌍 Group Chat</button>
     </div>
-    <ul id="messages" class="chat-messages"></ul>
-    <form id="form" class="chat-input">
-      <input id="input" placeholder="Type a message..." autocomplete="off" />
-      <button>Send</button>
-    </form>
+
+    <div class="chat-main">
+      <div class="chat-header">
+        <h3 id="chatTitle">Group Chat 🌍</h3>
+      </div>
+      <ul id="messages" class="chat-messages"></ul>
+      <form id="form" class="chat-input">
+        <input id="input" placeholder="Type a message..." autocomplete="off" />
+        <button>Send</button>
+      </form>
+    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
-    let myName = '';
-
-    const loginDiv = document.getElementById('loginDiv');
-    const nameInput = document.getElementById('nameInput');
-    const joinBtn = document.getElementById('joinBtn');
-    const chatDiv = document.getElementById('chatDiv');
-    const messages = document.getElementById('messages');
-    const form = document.getElementById('form');
-    const input = document.getElementById('input');
-    const usernameLabel = document.getElementById('usernameLabel');
-
-    joinBtn.addEventListener('click', () => {
-      const name = nameInput.value.trim();
-      if (!name) return alert('Please enter your name');
-      myName = name;
-      socket.emit('join', name);
-      loginDiv.classList.add('hidden');
-      chatDiv.classList.remove('hidden');
-      usernameLabel.textContent = name;
-    });
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      if (!input.value) return;
-      socket.emit('chat message', input.value);
-      input.value = '';
-    });
-
-    socket.on('chat message', (msg) => {
-      const item = document.createElement('li');
-      if (msg.system) {
-        item.classList.add('system-msg');
-        item.textContent = msg.text;
-      } else if (msg.username === myName) {
-        item.classList.add('my-msg');
-        item.innerHTML = `<div class="bubble mine"><span>${msg.text}</span></div>`;
-      } else {
-        item.classList.add('other-msg');
-        item.innerHTML = `<div class="bubble theirs"><strong>${msg.username}</strong><br>${msg.text}</div>`;
-      }
-      messages.appendChild(item);
-      messages.scrollTop = messages.scrollHeight;
-    });
-  </script>
+  <script src="client.js"></script>
 </body>
 </html>

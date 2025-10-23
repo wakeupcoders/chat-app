@@ -1,31 +1,63 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const http = require('http');
+const http = require("http");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + "/public"));
 
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
-});
+const users = {}; // username -> socket.id
 
-io.on('connection', (socket) => {
-  socket.on('join', (username) => {
+io.on("connection", (socket) => {
+  console.log("a user connected", socket.id);
+
+  socket.on("join", (username) => {
     socket.username = username;
-    socket.broadcast.emit('chat message', { system: true, text: `${username} joined the chat` });
+    users[username] = socket.id;
+    console.log(`${username} joined`);
+    io.emit("user list", Object.keys(users));
+    socket.broadcast.emit("chat message", {
+      system: true,
+      text: `${username} joined the group`,
+    });
   });
 
-  socket.on('chat message', (msg) => {
-    const username = socket.username || 'Anonymous';
-    io.emit('chat message', { username, text: msg });
+  socket.on("disconnect", () => {
+    if (socket.username) {
+      delete users[socket.username];
+      io.emit("user list", Object.keys(users));
+      socket.broadcast.emit("chat message", {
+        system: true,
+        text: `${socket.username} left the chat`,
+      });
+    }
   });
 
-  socket.on('disconnect', () => {
-    const username = socket.username;
-    if (username) {
-      socket.broadcast.emit('chat message', { system: true, text: `${username} left the chat` });
+  // Handle group messages
+  socket.on("group message", (msg) => {
+    io.emit("chat message", {
+      username: socket.username,
+      text: msg,
+      to: "group",
+    });
+  });
+
+  // Handle private messages
+  socket.on("private message", ({ to, text }) => {
+    const targetSocketId = users[to];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("private message", {
+        from: socket.username,
+        text,
+      });
+      // echo message to sender’s own chat
+      socket.emit("private message", {
+        from: socket.username,
+        text,
+        self: true,
+        to,
+      });
     }
   });
 });
