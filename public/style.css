@@ -1,12 +1,12 @@
-/* General reset */
-* { box-sizing: border-box; }
+/* Reset & base */
+* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  margin: 0;
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: #ece5dd;
+  background-color: #ece5dd;
+  height: 100vh;
 }
 
-/* Login Screen */
+/* Login screen */
 .login-screen {
   display: flex;
   height: 100vh;
@@ -19,14 +19,13 @@ body {
   padding: 2rem;
   border-radius: 1rem;
   text-align: center;
-  width: 300px;
+  width: 90%;
+  max-width: 320px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
-.login-box h2 { margin-bottom: 0.5rem; }
-.login-box p { color: #666; }
 .login-box input {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.6rem;
   margin-top: 1rem;
   border: 1px solid #ccc;
   border-radius: 0.5rem;
@@ -34,20 +33,17 @@ body {
 .login-box button {
   margin-top: 1rem;
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.6rem;
   background: #25d366;
   border: none;
   color: white;
   font-weight: bold;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: 0.2s;
 }
-.login-box button:hover {
-  background: #1ebe5b;
-}
+.login-box button:hover { background: #1ebe5b; }
 
-/* Chat layout */
+/* Chat container */
 .chat-container {
   display: flex;
   flex-direction: column;
@@ -65,11 +61,13 @@ body {
   font-weight: bold;
 }
 
+/* Message area */
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
   list-style: none;
+  background-color: #e5ddd5;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -79,58 +77,78 @@ body {
   text-align: center;
   color: #666;
   font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+
+.my-msg,
+.other-msg {
+  display: flex;
+  width: 100%;
 }
 
 .my-msg {
-  align-self: flex-end;
+  justify-content: flex-end;
 }
-
 .other-msg {
-  align-self: flex-start;
+  justify-content: flex-start;
 }
 
-/* Chat bubbles */
+/* Bubbles */
 .bubble {
+  display: inline-block;
   padding: 0.6rem 1rem;
   border-radius: 1rem;
-  max-width: 70%;
+  max-width: 75%;
   word-wrap: break-word;
   font-size: 1rem;
   line-height: 1.3;
+  white-space: pre-wrap;
 }
+
 .mine {
   background: #dcf8c6;
   border-bottom-right-radius: 0.3rem;
 }
 .theirs {
-  background: white;
+  background: #fff;
   border-bottom-left-radius: 0.3rem;
-  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 
-/* Input area */
+/* Input bar */
 .chat-input {
   display: flex;
+  align-items: center;
   padding: 0.5rem;
   background: #f0f0f0;
 }
 .chat-input input {
   flex: 1;
-  padding: 0.6rem;
+  padding: 0.6rem 1rem;
   border: none;
   border-radius: 1.5rem;
-  margin-right: 0.5rem;
   outline: none;
+  font-size: 1rem;
 }
 .chat-input button {
+  margin-left: 0.5rem;
   background: #128c7e;
   color: white;
   border: none;
-  padding: 0 1rem;
+  padding: 0.6rem 1rem;
   border-radius: 1.5rem;
   cursor: pointer;
-  transition: 0.2s;
+  font-weight: bold;
 }
 .chat-input button:hover {
   background: #0e6f63;
+}
+
+/* Scrollbar styling (optional) */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-messages::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.2);
+  border-radius: 3px;
 }
