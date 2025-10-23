@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket.IO chat with names</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="loginDiv">
+    <h2>Enter your name to join the chat</h2>
+    <input id="nameInput" autocomplete="off" placeholder="Your name" /><button id="joinBtn">Join Chat</button>
+  </div>
+
+  <div id="chatDiv" style="display:none;">
+    <ul id="messages"></ul>
+    <form id="form" action="">
+      <input id="input" autocomplete="off" /><button>Send</button>
+    </form>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const loginDiv = document.getElementById('loginDiv');
+    const nameInput = document.getElementById('nameInput');
+    const joinBtn = document.getElementById('joinBtn');
+
+    const chatDiv = document.getElementById('chatDiv');
+    const messages = document.getElementById('messages');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+
+    let myName = '';
+
+    joinBtn.addEventListener('click', () => {
+      const name = nameInput.value.trim();
+      if (!name) {
+        alert('Please enter a name');
+        return;
+      }
+      myName = name;
+      socket.emit('join', name);
+      loginDiv.style.display = 'none';
+      chatDiv.style.display = 'block';
+    });
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (input.value) {
+        socket.emit('chat message', input.value);
+        input.value = '';
+      }
+    });
+
+    socket.on('chat message', function(msg) {
+      const item = document.createElement('li');
+      item.textContent = msg;
+      messages.appendChild(item);
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+  </script>
+</body>
+</html>
