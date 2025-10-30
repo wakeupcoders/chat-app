@@ -40,28 +40,39 @@ jobs:
           with open('pr.diff', 'r') as f:
               diff = f.read()
 
-          # Call Gemini API
-          payload = {
-              "contents": [{
-                  "parts": [{"text": f"Review this diff and provide code review feedback:\n{diff}"}]
-              }]
-          }
-          headers = {
-              "Content-Type": "application/json",
-              "Authorization": f"Bearer {os.environ['GEMINI_API_KEY']}"
-          }
-          response = requests.post(
-              "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
-              json=payload,
-              headers=headers,
-              params={"key": os.environ['GEMINI_API_KEY']}
-          )
-          result = response.json()
-          feedback = result.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "No feedback generated.")
+          if not diff.strip():
+              feedback = "No code changes detected in this PR."
+          else:
+              # Call Gemini API
+              payload = {
+                  "contents": [{
+                      "parts": [{"text": f"Review this diff and provide code review feedback:\n{diff}"}]
+                  }]
+              }
+              headers = {
+                  "Content-Type": "application/json",
+                  "Authorization": f"Bearer {os.environ['GEMINI_API_KEY']}"
+              }
+              response = requests.post(
+                  "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+                  json=payload,
+                  headers=headers,
+                  params={"key": os.environ['GEMINI_API_KEY']}
+              )
+              try:
+                  result = response.json()
+                  feedback = (
+                      result.get("candidates", [{}])[0]
+                      .get("content", {})
+                      .get("parts", [{}])[0]
+                      .get("text", "No feedback generated.")
+                  )
+              except Exception as e:
+                  feedback = f"Failed to get feedback from Gemini API: {e}"
 
           # Post feedback as a PR comment
           comment_url = f"https://api.github.com/repos/{os.environ['REPO']}/issues/{os.environ['PR_NUMBER']}/comments"
-          requests.post(
+          resp = requests.post(
               comment_url,
               headers={
                   "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
@@ -69,4 +80,6 @@ jobs:
               },
               json={"body": f"🤖 **Gemini AI Code Review:**\n\n{feedback}"}
           )
+          if resp.status_code >= 300:
+              print("Failed to post PR comment:", resp.text)
           EOF
