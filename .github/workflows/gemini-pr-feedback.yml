@@ -1,0 +1,72 @@
+name: Gemini PR Feedback
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  gemini-feedback:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Get PR diff
+        id: diff
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff origin/${{ github.base_ref }}...HEAD > pr.diff
+
+      - name: Call Gemini API and comment
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          python <<EOF
+          import os
+          import requests
+
+          # Read PR diff
+          with open('pr.diff', 'r') as f:
+              diff = f.read()
+
+          # Call Gemini API
+          payload = {
+              "contents": [{
+                  "parts": [{"text": f"Review this diff and provide code review feedback:\n{diff}"}]
+              }]
+          }
+          headers = {
+              "Content-Type": "application/json",
+              "Authorization": f"Bearer {os.environ['GEMINI_API_KEY']}"
+          }
+          response = requests.post(
+              "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+              json=payload,
+              headers=headers,
+              params={"key": os.environ['GEMINI_API_KEY']}
+          )
+          result = response.json()
+          feedback = result.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "No feedback generated.")
+
+          # Post feedback as a PR comment
+          comment_url = f"https://api.github.com/repos/{os.environ['REPO']}/issues/{os.environ['PR_NUMBER']}/comments"
+          requests.post(
+              comment_url,
+              headers={
+                  "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+                  "Accept": "application/vnd.github+json"
+              },
+              json={"body": f"🤖 **Gemini AI Code Review:**\n\n{feedback}"}
+          )
+          EOF
